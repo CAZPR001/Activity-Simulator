@@ -1,3 +1,4 @@
+from keep_alive import keep_alive
 import os
 import sys
 import json
@@ -9,9 +10,9 @@ from datetime import datetime
 
 # Set initial status (for now it will be "invisible")
 status = "invisible"
-custom_status= "UwU <3"
+custom_status= os.environ.get('custom_status')
 
-usertoken ="Nzk0MTE2NDczMDg1ODg2NDg1.GG79Wk.gcs3J6VFv1tL8mm8SGSyvtegM2eWsuoisGUckg"
+usertoken = os.environ.get('token')
 
 if not usertoken:
     print("[ERROR] Please add a token inside Secrets.")
@@ -105,4 +106,5 @@ def run_onliner():
         onliner(usertoken, status)  # Set the status on Discord
         time.sleep(60)  # Check and update every minute
 
+keep_alive()
 run_onliner()
