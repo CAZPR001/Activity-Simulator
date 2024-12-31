@@ -31,7 +31,8 @@ discriminator = userinfo["discriminator"]
 userid = userinfo["id"]
 
 # Set up IST timezone
-ist = pytz.timezone('Asia/Kolkata')
+tz= os.environ.get('timezone')
+ist = pytz.timezone(tz)
 
 # Function to change the bot's status based on time
 def update_status_based_on_time():
