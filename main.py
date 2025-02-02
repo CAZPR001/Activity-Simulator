@@ -9,7 +9,7 @@ import pytz
 from datetime import datetime
 
 # Set initial status (for now it will be "invisible")
-status = "invisible"
+status = "dnd"
 custom_status= os.environ.get('custom_status')
 
 usertoken = os.environ.get('token')
