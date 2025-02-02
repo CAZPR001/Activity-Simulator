@@ -6,7 +6,7 @@ import time
 import requests
 import websocket
 import pytz
-from datetime import datetime
+from datetime import datetime,timedelta
 
 # Set initial status (for now it will be "invisible")
 status = "dnd"
