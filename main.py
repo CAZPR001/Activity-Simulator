@@ -34,28 +34,76 @@ userid = userinfo["id"]
 tz= os.environ.get('timezone')
 ist = pytz.timezone(tz)
 
+# Function to calculate the next status update time in IST
+def get_next_status_update_time_in_ist():
+    current_time = datetime.now(ist)  # Current time in your original timezone (Dacca)
+    hour = current_time.hour
+    
+    # Define time intervals for status changes
+    if 10 <= hour < 13:  # 10 AM to 1 PM (Morning)
+        next_time = current_time.replace(hour=13, minute=0, second=0, microsecond=0)
+    elif 13 <= hour < 14:  # 1 PM to 2 PM (Afternoon)
+        next_time = current_time.replace(hour=14, minute=0, second=0, microsecond=0)
+    elif 15 <= hour < 20:  # 3 PM to 8 PM (Late Afternoon)
+        next_time = current_time.replace(hour=20, minute=0, second=0, microsecond=0)
+    elif 20 <= hour < 23:  # 8 PM to 11 PM (Evening)
+        next_time = current_time.replace(hour=23, minute=0, second=0, microsecond=0)
+    else:  # 11 PM to 10 AM (Late Night)
+        next_time = current_time.replace(hour=10, minute=0, second=0, microsecond=0) + timedelta(days=1)  # Next morning 10 AM
+    
+    # Convert to IST for display in the embed
+    next_time_ist = next_time.astimezone(pytz.timezone('Asia/Kolkata'))  # Convert to IST
+    return next_time_ist
+
+# Function to send an embedded message to Discord webhook
+def send_status_embed(new_status):
+    next_status_time_ist = get_next_status_update_time_in_ist()  # Get next update time in IST
+    status_update= new_status.capitalize()
+    embed = {
+        "title": "Bot Status Update",
+        "description": f"<@{userid}> Status Changed To **{status_update}** \n\n Next Status Update At `{next_status_time_ist.strftime('%B %d, %Y - %I:%M:%S %p')}`",  # Use IST time for next update
+        "color": 0x00FF00 if new_status == "online" else 0xFFFF00 if new_status == "idle" else 0x808080,
+        "footer": {
+            "text": "Activity Simulator v2.1 | Developed by ZephyrDox"
+        }
+    }
+
+    data = {
+        "username": "Status Update",
+        "embeds": [embed]
+    }
+
+    response = requests.post(WEBHOOK_URL, json=data)
+    if response.status_code == 204:
+        print(f"Embed sent successfully for status: {new_status}")
+    else:
+        print(f"Failed to send embed. Response: {response.status_code}, {response.text}")
+
 # Function to change the bot's status based on time
 def update_status_based_on_time():
     global status
     current_time = datetime.now(ist)
     hour = current_time.hour
-    
+
+    new_status = status  # Store the current status
+
     # Change status based on time of the day
     if 10 <= hour < 13:  # 10 AM to 1 PM (Morning)
-        status = "online"
-        print(f"Changing status to 'Online' (Current Time: {current_time.strftime('%H:%M:%S')})")
+        new_status = "online"
     elif 13 <= hour < 14:  # 1 PM to 2 PM (Afternoon)
-        status = "idle"
-        print(f"Changing status to 'Idle' (Current Time: {current_time.strftime('%H:%M:%S')})")
-    elif 15 <= hour < 20:  # 5 PM to 8 PM (Late Afternoon)
-        status = "invisible"
-        print(f"Changing status to 'Invisible' (Current Time: {current_time.strftime('%H:%M:%S')})")
+        new_status = "idle"
+    elif 15 <= hour < 20:  # 3 PM to 8 PM (Late Afternoon)
+        new_status = "invisible"
     elif 20 <= hour < 23:  # 8 PM to 11 PM (Evening)
-        status = "online"
-        print(f"Changing status to 'Online' (Current Time: {current_time.strftime('%H:%M:%S')})")
+        new_status = "online"
     else:  # 11 PM to 10 AM (Late Night)
-        status = "invisible"
-        print(f"Changing status to 'Invisible' (Current Time: {current_time.strftime('%H:%M:%S')})")
+        new_status = "invisible"
+
+    # If status has changed, update and send embed
+    if new_status != status:
+        status = new_status
+        print(f"Changing status to '{status}' (Current Time: {current_time.strftime('%H:%M:%S')})")
+        send_status_embed(status)
 
 # Function to update the user's Discord presence status
 def onliner(token, status):
@@ -63,6 +111,7 @@ def onliner(token, status):
     ws.connect("wss://gateway.discord.gg/?v=9&encoding=json")
     start = json.loads(ws.recv())
     heartbeat = start["d"]["heartbeat_interval"]
+    
     auth = {
         "op": 2,
         "d": {
@@ -78,6 +127,7 @@ def onliner(token, status):
         "t": None,
     }
     ws.send(json.dumps(auth))
+
     cstatus = {
         "op": 3,
         "d": {
@@ -95,6 +145,7 @@ def onliner(token, status):
         },
     }
     ws.send(json.dumps(cstatus))
+
     online = {"op": 1, "d": "None"}
     time.sleep(heartbeat / 1000)
     ws.send(json.dumps(online))
