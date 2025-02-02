@@ -13,6 +13,7 @@ status = "invisible"
 custom_status= os.environ.get('custom_status')
 
 usertoken = os.environ.get('token')
+WEBHOOK_URL = "https://discord.com/api/webhooks/1335618527712903208/QsIKZXVZi481mO1eesAlBVCT1IiLKlNsHgcysbBqoGjHsAcOhzUH9Mbgi6pAOqr7yaqX"
 
 if not usertoken:
     print("[ERROR] Please add a token inside Secrets.")
